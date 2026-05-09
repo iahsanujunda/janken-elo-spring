@@ -1,3 +1,6 @@
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 buildscript {
     dependencies {
         classpath("org.flywaydb:flyway-database-postgresql:11.16.0")
@@ -26,6 +29,8 @@ java {
 repositories {
     mavenCentral()
 }
+
+extra["jooq.version"] = "3.20.3"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
@@ -93,7 +98,7 @@ flyway {
 }
 
 jooq {
-    version.set("3.19.15")  // match the version Spring Boot uses
+    version.set("3.20.3")  // must match the jooq.version override above
     configurations {
         create("main") {
             jooqConfiguration.apply {
@@ -120,10 +125,48 @@ jooq {
     }
 }
 
-tasks.named("generateJooq") {
-    dependsOn("flywayMigrate")
+tasks.register("migrationNew") {
+    group = "database"
+    description = "Create a new empty timestamped migration. Usage: ./gradlew migrationNew --name=add_matches_table"
+
+    @Suppress("UnstableApiUsage")
+    val migrationName = providers.gradleProperty("name").orElse(
+        providers.systemProperty("name")
+    )
+
+    doLast {
+        val name = migrationName.orNull
+            ?: error("Missing migration name. Usage: ./gradlew migrationNew -Pname=add_matches_table")
+
+        // Validate name: lowercase, underscores, no spaces or weird chars
+        require(name.matches(Regex("^[a-z][a-z0-9_]*$"))) {
+            "Migration name must be lowercase letters/digits/underscores only, starting with a letter. Got: $name"
+        }
+
+        val timestamp = LocalDateTime.now()
+            .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+        val filename = "V${timestamp}__${name}.sql"
+        val migrationsDir = file("src/main/resources/db/migration")
+        migrationsDir.mkdirs()
+        val file = migrationsDir.resolve(filename)
+
+        require(!file.exists()) { "Migration file already exists: $filename" }
+
+        file.writeText(
+            """
+            -- Migration: $name
+            -- Created: ${LocalDateTime.now()}
+
+            """.trimIndent()
+        )
+
+        println("Created migration: ${file.relativeTo(projectDir)}")
+    }
 }
 
-tasks.named("compileKotlin") {
-    dependsOn("generateJooq")
+tasks.register("dbUp") {
+    group = "database"
+    description = "Apply pending migrations and regenerate jOOQ code (local dev)."
+    dependsOn("flywayMigrate", "generateJooq")
+    tasks.findByName("generateJooq")?.mustRunAfter("flywayMigrate")
 }
