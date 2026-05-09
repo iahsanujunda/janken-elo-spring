@@ -11,7 +11,6 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.jetbrains.kotlin.plugin.spring") version "2.2.21"
     id("org.springframework.boot") version "4.0.6"
-    id("io.spring.dependency-management") version "1.1.7"
     id("org.flywaydb.flyway") version "11.16.0"
     id("nu.studer.jooq") version "10.1"
 }
@@ -33,6 +32,7 @@ repositories {
 extra["jooq.version"] = "3.20.3"
 
 dependencies {
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.springframework.boot:spring-boot-starter-jooq")

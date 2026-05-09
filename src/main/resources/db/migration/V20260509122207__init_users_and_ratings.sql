@@ -5,17 +5,17 @@
 -- Supabase Auth owns user creation; we lazily provision a row here on
 -- first authenticated request to our API.
 CREATE TABLE users (
-                       id          UUID PRIMARY KEY,
-                       created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                       updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id          UUID PRIMARY KEY,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE player_ratings (
-                                user_id        UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-                                rating         INT NOT NULL DEFAULT 1200,
-                                games_played   INT NOT NULL DEFAULT 0,
-                                peak_rating    INT NOT NULL DEFAULT 1200,
-                                updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    user_id        UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    rating         INT NOT NULL DEFAULT 1200,
+    games_played   INT NOT NULL DEFAULT 0,
+    peak_rating    INT NOT NULL DEFAULT 1200,
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_player_ratings_rating_desc ON player_ratings (rating DESC);
