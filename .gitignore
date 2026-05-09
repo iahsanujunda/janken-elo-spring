@@ -43,3 +43,4 @@ out/
 application-local.yml
 .idea/
 .gradle/
+supabase/
