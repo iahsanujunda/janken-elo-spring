@@ -16,4 +16,22 @@ class UserProfileService(
         userRepository.createNewUser(userId)
         playerRatingRepositories.createNewPlayerRating(userId)
     }
+
+    fun getUserProfile(userId: UUID): ProfileResponse {
+        ensureProvisioned(userId)
+        val rating = playerRatingRepositories.getRatingByUserId(userId)
+        return ProfileResponse(
+            userId = userId,
+            rating = rating.rating,
+            gamesPlayed = rating.gamesPlayed,
+            peakRating = rating.peakRating,
+        )
+    }
 }
+
+data class ProfileResponse(
+    val userId: UUID,
+    val rating: Int,
+    val gamesPlayed: Int,
+    val peakRating: Int
+)
